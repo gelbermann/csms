@@ -31,17 +31,13 @@ dependencies {
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
 	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
 	implementation 'com.github.ben-manes.caffeine:caffeine'
-	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
-	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
 	testImplementation 'org.mockito:mockito-junit-jupiter'
-	testImplementation 'org.mockito.kotlin:mockito-kotlin:5.2.1'
 	testImplementation 'org.assertj:assertj-core'
-	testCompileOnly 'org.projectlombok:lombok'
-	testAnnotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.mockito.kotlin:mockito-kotlin:5.2.1'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
