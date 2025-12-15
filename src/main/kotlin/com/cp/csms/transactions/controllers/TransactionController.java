@@ -23,23 +23,34 @@ public class TransactionController {
 
     private final AuthorizationService authorizationService;
 
+//    @PostMapping("/authorize")
+//    public AuthorizationResponse authorizeTransaction(@RequestBody AuthorizationRequest request) {
+//        log.info("Authorizing transaction for request: {}", request);
+//
+//        final var response = authorizationService.authorize(request);
+//
+//        try {
+//            AuthResponse response = future.get(5, TimeUnit.SECONDS);
+//            return ResponseEntity.ok(response);
+//        } catch (TimeoutException e) {
+//            pendingRequests.remove(correlationId);
+//            return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
+//                    .body(new AuthResponse("Timeout"));
+//        } catch (Exception e) {
+//            pendingRequests.remove(correlationId);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(new AuthResponse("Error"));
+//        }
+//    }
+
     @PostMapping("/authorize")
     public AuthorizationResponse authorizeTransaction(@RequestBody AuthorizationRequest request) {
         log.info("Authorizing transaction for request: {}", request);
 
-        final var response = authorizationService.authorize(request);
+        final var status = authorizationService.authorize(request);
 
-        try {
-            AuthResponse response = future.get(5, TimeUnit.SECONDS);
-            return ResponseEntity.ok(response);
-        } catch (TimeoutException e) {
-            pendingRequests.remove(correlationId);
-            return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
-                    .body(new AuthResponse("Timeout"));
-        } catch (Exception e) {
-            pendingRequests.remove(correlationId);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new AuthResponse("Error"));
-        }
+        return AuthorizationResponse.builder()
+                .authenticationStatus(status.orElse(null))
+                .build();
     }
 }
