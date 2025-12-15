@@ -3,8 +3,8 @@ package com.cp.csms.transactions.controllers;
 import com.cp.csms.common.AuthenticationMessage;
 import com.cp.csms.common.AuthenticationResponse;
 import com.cp.csms.common.AuthenticationStatus;
+import com.cp.csms.config.KafkaTopicConfig;
 import com.cp.csms.transactions.AuthorizationRequest;
-import com.cp.csms.transactions.AuthorizationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -29,8 +29,9 @@ public class AuthorizationService {
     // TODO think if concurrent map is the best way to handle pending requests
     private final Map<String, CompletableFuture<AuthenticationResponse>> pendingRequests = new ConcurrentHashMap<>();
 
-    // TODO extract to dedicated producer class
     private final KafkaTemplate<String, AuthenticationMessage> kafkaProducer;
+
+    private final KafkaTopicConfig kafkaTopicConfig;
 
     public Optional<AuthenticationStatus> authorize(AuthorizationRequest request) {
         final String requestId = UUID.randomUUID().toString();
@@ -43,7 +44,7 @@ public class AuthorizationService {
                 .token(request.getDriverIdentifier().getId())
                 .build();
 
-        kafkaProducer.send("auth-request", requestId, message); // TODO extract topic name to yaml/config class
+        kafkaProducer.send(kafkaTopicConfig.getAuthRequestTopic(), requestId, message);
 
         try {
             final AuthenticationResponse response = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -59,7 +60,11 @@ public class AuthorizationService {
         }
     }
 
-    @KafkaListener(topics = "auth-response", groupId = "transaction-service") // TODO extract names to yaml/config class
+    @KafkaListener(
+            topics = "${kafka.topics.auth-response}", 
+            groupId = "${kafka.consumer.transaction-service.group-id}",
+            containerFactory = "authResponseKafkaListenerContainerFactory"
+    )
     public void handleAuthResponse(AuthenticationResponse response) {
         CompletableFuture<AuthenticationResponse> future = pendingRequests.remove(response.getRequestId());
 
