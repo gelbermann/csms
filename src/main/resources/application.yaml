@@ -25,3 +25,7 @@ kafka:
   consumer:
     transaction-service:
       group-id: transaction-service
+
+transaction-service:
+  authorization:
+    timeout-seconds: 5

@@ -8,6 +8,7 @@ import com.cp.csms.transactions.AuthorizationRequest;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -21,9 +22,10 @@ import java.util.concurrent.TimeoutException;
 @Service
 public class AuthorizationService {
 
-    private static final int TIMEOUT_SECONDS = 5;
     private static final int CACHE_MAX_SIZE = 10000;
     private static final int CACHE_EXPIRE_MINUTES = 10;
+
+    private final int timeoutSeconds;
 
     private final Cache<String, CompletableFuture<AuthenticationResponse>> pendingRequests;
 
@@ -32,9 +34,11 @@ public class AuthorizationService {
     private final KafkaTopicConfig kafkaTopicConfig;
 
     public AuthorizationService(KafkaTemplate<String, AuthenticationMessage> kafkaProducer,
-                                KafkaTopicConfig kafkaTopicConfig) {
+                                KafkaTopicConfig kafkaTopicConfig,
+                                @Value("${transaction-service.authorization.timeout-seconds}") int timeoutSeconds) {
         this.kafkaProducer = kafkaProducer;
         this.kafkaTopicConfig = kafkaTopicConfig;
+        this.timeoutSeconds = timeoutSeconds;
         this.pendingRequests = Caffeine.newBuilder()
                 .maximumSize(CACHE_MAX_SIZE)
                 .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
@@ -60,7 +64,7 @@ public class AuthorizationService {
         kafkaProducer.send(kafkaTopicConfig.getAuthRequestTopic(), requestId, message);
 
         try {
-            final AuthenticationResponse response = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            final AuthenticationResponse response = future.get(timeoutSeconds, TimeUnit.SECONDS);
             return response.getStatus();
         } catch (TimeoutException e) {
             log.warn("Authorization request timed out for requestId: {}", requestId);
