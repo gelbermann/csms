@@ -1,6 +1,6 @@
 package com.cp.csms.authentication;
 
-import com.cp.csms.authentication.validation.AuthenticationValidator;
+import com.cp.csms.authentication.validation.ValidationService;
 import com.cp.csms.common.AuthenticationMessage;
 import com.cp.csms.common.AuthenticationResponse;
 import com.cp.csms.common.AuthenticationStatus;
@@ -10,20 +10,19 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class AuthenticationConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(AuthenticationConsumer.class);
 
-    private final List<AuthenticationValidator> validators;
-    private final TokenStatusProvider tokenStatusProvider;
+    private final ValidationService validationService;
+    private final AuthenticationService authenticationService;
 
-    public AuthenticationConsumer(List<AuthenticationValidator> validators,
-                                  TokenStatusProvider tokenStatusProvider) {
-        this.validators = validators;
-        this.tokenStatusProvider = tokenStatusProvider;
+    public AuthenticationConsumer(
+            ValidationService validationService,
+            AuthenticationService authenticationService) {
+        this.validationService = validationService;
+        this.authenticationService = authenticationService;
     }
 
     @KafkaListener(
@@ -35,10 +34,7 @@ public class AuthenticationConsumer {
     public AuthenticationResponse handleAuthRequest(AuthenticationMessage message) {
         log.info("Received authentication request: {}", message);
 
-        final boolean isValid = validators.stream()
-                .allMatch(validator -> validator.validate(message));
-
-        if (!isValid) {
+        if (!validationService.isValid(message)) {
             log.warn("Validation failed for token: {}", message.getToken());
             return new AuthenticationResponse(
                     message.getRequestId(),
@@ -46,12 +42,8 @@ public class AuthenticationConsumer {
             );
         }
 
-        final AuthenticationStatus authenticationStatus = tokenStatusProvider.isTokenEnabled(message.getToken())
-                .map(tokenEnabled -> tokenEnabled
-                        ? AuthenticationStatus.ACCEPTED
-                        : AuthenticationStatus.REJECTED)
-                .orElse(AuthenticationStatus.UNKNOWN);
-
+        final AuthenticationStatus authenticationStatus = 
+                authenticationService.authenticate(message.getToken());
         return new AuthenticationResponse(
                 message.getRequestId(),
                 authenticationStatus
