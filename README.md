@@ -14,6 +14,7 @@ Below is a comprehensive overview of the CSMS project, including its architectur
 Before diving into the details, here are some personal notes, thoughts and assumptions made during development:
 
 ### 🤔 Assumptions 🤔
+- As discussed in our meeting, I'm not proficient at Kotlin. I chose to develop this project in Java and convert it later to Kotlin with Copilot. The converted code is probably not up-to-par with Kotlin standards (espeically regarding nullability). But reviewing the converted code was an interesting learning opportunity - thanks for that!
 - There is only one form of driver identifier for simplicity. The logic is easily extensible to support multiple types.
 - DTO naming is inconsistent (authorization vs authentication) to match the provided PDF and reduce confusion. Ideally, I would standardize the names.
 
@@ -22,7 +23,7 @@ Before diving into the details, here are some personal notes, thoughts and assum
 #### Token Status Management
 I'm using an in-memory map for `TokenStatusProvider` to simulate a database or external service. In a real-world scenario, this would be replaced with a proper persistence layer.
 
-#### Multi-instance support (Most interesting point) 
+#### Multi-instance support (most interesting point❕❕) 
 This application is currently designed as a single instance for simplicity.  If the application goes down, all pending authorization requests in the in-memory cache would be lost.
 
 Simply running multiple instances with local caches would lead to inconsistent states across instances:
