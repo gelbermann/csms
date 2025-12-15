@@ -5,7 +5,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
-@Order(2)
 public class TokenLengthValidator implements AuthenticationValidator {
 
     private static final int MIN_TOKEN_LENGTH = 20;
