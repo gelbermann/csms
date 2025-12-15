@@ -6,6 +6,7 @@ import com.cp.csms.common.AuthenticationStatus;
 import com.cp.csms.config.KafkaTopicConfig;
 import com.cp.csms.transactions.AuthorizationRequest;
 import com.cp.csms.transactions.DriverIdentifier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -36,7 +37,6 @@ public class AuthorizationServiceTest {
     @Mock
     private KafkaTopicConfig kafkaTopicConfig;
 
-    @InjectMocks
     private AuthorizationService underTest;
 
     @Captor
@@ -49,6 +49,12 @@ public class AuthorizationServiceTest {
     private static final String DRIVER_ID = "driver-123";
     private static final String STATION_UUID = "station-uuid";
     private static final int ASYNC_SETUP_DELAY_MS = 100;
+    private static final int TIMEOUT_SECONDS = 5;
+
+    @BeforeEach
+    public void setUp() {
+        underTest = new AuthorizationService(kafkaProducer, kafkaTopicConfig, TIMEOUT_SECONDS);
+    }
 
     @Test
     public void authorize_shouldSendKafkaMessageAndReturnAcceptedStatus_whenResponseReceivedInTime() throws Exception {
@@ -131,14 +137,8 @@ public class AuthorizationServiceTest {
     }
 
     private AuthorizationRequest createAuthorizationRequest() {
-        final DriverIdentifier driverIdentifier = DriverIdentifier.builder()
-                .id(DRIVER_ID)
-                .build();
-
-        return AuthorizationRequest.builder()
-                .stationUuid(STATION_UUID)
-                .driverIdentifier(driverIdentifier)
-                .build();
+        final DriverIdentifier driverIdentifier = new DriverIdentifier(DRIVER_ID);
+        return new AuthorizationRequest(STATION_UUID, driverIdentifier);
     }
 
     private void stubKafkaConfiguration() {
@@ -175,9 +175,6 @@ public class AuthorizationServiceTest {
     }
 
     private AuthenticationResponse createAuthResponse(String requestId, AuthenticationStatus status) {
-        return AuthenticationResponse.builder()
-                .requestId(requestId)
-                .status(status)
-                .build();
+        return new AuthenticationResponse(requestId, status);
     }
 }

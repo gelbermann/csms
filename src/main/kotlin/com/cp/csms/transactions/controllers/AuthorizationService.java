@@ -7,7 +7,8 @@ import com.cp.csms.config.KafkaTopicConfig;
 import com.cp.csms.transactions.AuthorizationRequest;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,9 +19,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@Slf4j
 @Service
 public class AuthorizationService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthorizationService.class);
 
     private static final int CACHE_MAX_SIZE = 10000;
     private static final int CACHE_EXPIRE_MINUTES = 10;
@@ -56,10 +58,10 @@ public class AuthorizationService {
 
         pendingRequests.put(requestId, future);
 
-        final AuthenticationMessage message = AuthenticationMessage.builder()
-                .requestId(requestId)
-                .token(request.getDriverIdentifier().getId())
-                .build();
+        final AuthenticationMessage message = new AuthenticationMessage(
+                requestId,
+                request.getDriverIdentifier().getId()
+        );
 
         kafkaProducer.send(kafkaTopicConfig.getAuthRequestTopic(), requestId, message);
 

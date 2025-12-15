@@ -1,10 +1,8 @@
 package com.cp.csms.config;
 
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
-@Getter
 @Configuration
 public class KafkaTopicConfig {
 
@@ -16,4 +14,16 @@ public class KafkaTopicConfig {
 
     @Value("${kafka.consumer.transaction-service.group-id}")
     private String transactionServiceGroupId;
+
+    public String getAuthRequestTopic() {
+        return authRequestTopic;
+    }
+
+    public String getAuthResponseTopic() {
+        return authResponseTopic;
+    }
+
+    public String getTransactionServiceGroupId() {
+        return transactionServiceGroupId;
+    }
 }

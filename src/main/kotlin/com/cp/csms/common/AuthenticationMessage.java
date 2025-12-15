@@ -1,13 +1,28 @@
 package com.cp.csms.common;
 
-import lombok.Builder;
-import lombok.Value;
-
-@Value
-@Builder
 public class AuthenticationMessage {
 
-    String requestId;
-    String token;
+    private final String requestId;
+    private final String token;
 
+    public AuthenticationMessage(String requestId, String token) {
+        this.requestId = requestId;
+        this.token = token;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    @Override
+    public String toString() {
+        return "AuthenticationMessage{" +
+                "requestId='" + requestId + '\'' +
+                ", token='" + token + '\'' +
+                '}';
+    }
 }

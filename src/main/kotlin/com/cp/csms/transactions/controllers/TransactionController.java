@@ -3,8 +3,8 @@ package com.cp.csms.transactions.controllers;
 import com.cp.csms.common.AuthenticationStatus;
 import com.cp.csms.transactions.AuthorizationRequest;
 import com.cp.csms.transactions.AuthorizationResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,13 +15,17 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.concurrent.TimeoutException;
 
 
-@Slf4j
 @RestController
-@RequiredArgsConstructor
 @RequestMapping(value = "api/v1/transaction")
 public class TransactionController {
 
+    private static final Logger log = LoggerFactory.getLogger(TransactionController.class);
+
     private final AuthorizationService authorizationService;
+
+    public TransactionController(AuthorizationService authorizationService) {
+        this.authorizationService = authorizationService;
+    }
 
     @PostMapping("/authorize")
     public ResponseEntity<AuthorizationResponse> authorizeTransaction(@RequestBody AuthorizationRequest request) {
@@ -30,11 +34,7 @@ public class TransactionController {
         try {
             final AuthenticationStatus authenticationStatus = authorizationService.authorize(request);
             log.info("Authorization result for request {}: {}", request, authenticationStatus);
-            return ResponseEntity.ok(
-                    AuthorizationResponse.builder()
-                            .authenticationStatus(authenticationStatus)
-                            .build()
-            );
+            return ResponseEntity.ok(new AuthorizationResponse(authenticationStatus));
         } catch (TimeoutException e) {
             return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).build();
         } catch (Exception e) {

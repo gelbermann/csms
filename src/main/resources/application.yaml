@@ -29,3 +29,10 @@ kafka:
 transaction-service:
   authorization:
     timeout-seconds: 5
+
+logging:
+  level:
+    com.cp.csms: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.kafka: INFO
+

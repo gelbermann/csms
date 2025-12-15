@@ -1,12 +1,25 @@
 package com.cp.csms.transactions;
 
-import lombok.Builder;
-import lombok.Value;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Value
-@Builder
 public class DriverIdentifier {
 
-    String id;
+    private final String id;
 
+    @JsonCreator
+    public DriverIdentifier(@JsonProperty("id") String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String toString() {
+        return "DriverIdentifier{" +
+                "id='" + id + '\'' +
+                '}';
+    }
 }

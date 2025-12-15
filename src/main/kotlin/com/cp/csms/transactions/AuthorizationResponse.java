@@ -1,13 +1,23 @@
 package com.cp.csms.transactions;
 
 import com.cp.csms.common.AuthenticationStatus;
-import lombok.Builder;
-import lombok.Value;
 
-@Value
-@Builder
 public class AuthorizationResponse {
 
-    AuthenticationStatus authenticationStatus;
+    private final AuthenticationStatus authenticationStatus;
 
+    public AuthorizationResponse(AuthenticationStatus authenticationStatus) {
+        this.authenticationStatus = authenticationStatus;
+    }
+
+    public AuthenticationStatus getAuthenticationStatus() {
+        return authenticationStatus;
+    }
+
+    @Override
+    public String toString() {
+        return "AuthorizationResponse{" +
+                "authenticationStatus=" + authenticationStatus +
+                '}';
+    }
 }
