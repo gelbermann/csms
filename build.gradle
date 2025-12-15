@@ -63,6 +63,14 @@ kotlin {
 	}
 }
 
+tasks.named('compileJava') {
+	dependsOn tasks.named('compileKotlin')
+}
+
+tasks.named('compileTestJava') {
+	dependsOn tasks.named('compileTestKotlin')
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }

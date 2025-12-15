@@ -1,21 +1,14 @@
-package com.cp.csms.authentication.validation;
+package com.cp.csms.authentication.validation
 
-import com.cp.csms.common.AuthenticationMessage;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
+import com.cp.csms.common.AuthenticationMessage
+import org.springframework.stereotype.Service
 
 @Service
-public class ValidationService {
+class ValidationService(
+    private val validators: List<AuthenticationValidator>
+) {
 
-    private final List<AuthenticationValidator> validators;
-
-    public ValidationService(List<AuthenticationValidator> validators) {
-        this.validators = validators;
-    }
-
-    public boolean isValid(AuthenticationMessage message) {
-        return validators.stream()
-                .allMatch(validator -> validator.validate(message));
+    fun isValid(message: AuthenticationMessage): Boolean {
+        return validators.all { it.validate(message) }
     }
 }

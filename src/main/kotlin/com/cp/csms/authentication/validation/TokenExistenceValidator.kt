@@ -1,17 +1,14 @@
-package com.cp.csms.authentication.validation;
+package com.cp.csms.authentication.validation
 
-import com.cp.csms.common.AuthenticationMessage;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import com.cp.csms.common.AuthenticationMessage
+import org.springframework.core.annotation.Order
+import org.springframework.stereotype.Component
 
 @Component
 @Order(1)
-public class TokenExistenceValidator implements AuthenticationValidator {
+class TokenExistenceValidator : AuthenticationValidator {
 
-    @Override
-    public boolean validate(AuthenticationMessage message) {
-        return message != null 
-            && message.getToken() != null 
-            && !message.getToken().isBlank();
+    override fun validate(message: AuthenticationMessage?): Boolean {
+        return message?.token?.isNotBlank() ?: false
     }
 }

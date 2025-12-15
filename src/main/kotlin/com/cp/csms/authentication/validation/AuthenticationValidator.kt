@@ -1,9 +1,7 @@
-package com.cp.csms.authentication.validation;
+package com.cp.csms.authentication.validation
 
-import com.cp.csms.common.AuthenticationMessage;
+import com.cp.csms.common.AuthenticationMessage
 
-public interface AuthenticationValidator {
-
-    boolean validate(AuthenticationMessage message);
-
+interface AuthenticationValidator {
+    fun validate(message: AuthenticationMessage?): Boolean
 }

@@ -1,19 +1,19 @@
-package com.cp.csms.authentication.validation;
+package com.cp.csms.authentication.validation
 
-import com.cp.csms.common.AuthenticationMessage;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import com.cp.csms.common.AuthenticationMessage
+import org.springframework.core.annotation.Order
+import org.springframework.stereotype.Component
 
 @Component
-public class TokenLengthValidator implements AuthenticationValidator {
+class TokenLengthValidator : AuthenticationValidator {
 
-    private static final int MIN_TOKEN_LENGTH = 20;
-    private static final int MAX_TOKEN_LENGTH = 80;
+    override fun validate(message: AuthenticationMessage?): Boolean {
+        val tokenLength = message?.token?.length ?: 0
+        return tokenLength in MIN_TOKEN_LENGTH..MAX_TOKEN_LENGTH
+    }
 
-    @Override
-    public boolean validate(AuthenticationMessage message) {
-        final String token = message.getToken();
-        return token.length() >= MIN_TOKEN_LENGTH 
-            && token.length() <= MAX_TOKEN_LENGTH;
+    companion object {
+        private const val MIN_TOKEN_LENGTH = 20
+        private const val MAX_TOKEN_LENGTH = 80
     }
 }

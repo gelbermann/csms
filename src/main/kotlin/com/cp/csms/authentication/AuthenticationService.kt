@@ -1,22 +1,19 @@
-package com.cp.csms.authentication;
+package com.cp.csms.authentication
 
-import com.cp.csms.common.AuthenticationStatus;
-import org.springframework.stereotype.Service;
+import com.cp.csms.common.AuthenticationStatus
+import org.springframework.stereotype.Service
 
 @Service
-public class AuthenticationService {
+class AuthenticationService(
+    private val tokenStatusProvider: TokenStatusProvider
+) {
 
-    private final TokenStatusProvider tokenStatusProvider;
-
-    public AuthenticationService(TokenStatusProvider tokenStatusProvider) {
-        this.tokenStatusProvider = tokenStatusProvider;
-    }
-
-    public AuthenticationStatus authenticate(String token) {
+    fun authenticate(token: String): AuthenticationStatus {
         return tokenStatusProvider.isTokenEnabled(token)
-                .map(tokenEnabled -> tokenEnabled
-                        ? AuthenticationStatus.ACCEPTED
-                        : AuthenticationStatus.REJECTED)
-                .orElse(AuthenticationStatus.UNKNOWN);
+            .map { tokenEnabled ->
+                if (tokenEnabled) AuthenticationStatus.ACCEPTED
+                else AuthenticationStatus.REJECTED
+            }
+            .orElse(AuthenticationStatus.UNKNOWN)
     }
 }

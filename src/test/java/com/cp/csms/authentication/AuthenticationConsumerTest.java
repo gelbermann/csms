@@ -33,7 +33,7 @@ class AuthenticationConsumerTest {
         final AuthenticationResponse response = consumer.handleAuthRequest(message);
 
         assertThat(response.getRequestId()).isEqualTo("req-123");
-        assertThat(response.getStatus()).isEqualTo(AuthenticationStatus.INVALID);
+        assertThat(response.getAuthenticationStatus()).isEqualTo(AuthenticationStatus.INVALID);
         verify(validationService).isValid(message);
         verifyNoInteractions(authenticationService);
     }
@@ -47,7 +47,7 @@ class AuthenticationConsumerTest {
         final AuthenticationResponse response = consumer.handleAuthRequest(message);
 
         assertThat(response.getRequestId()).isEqualTo("req-456");
-        assertThat(response.getStatus()).isEqualTo(AuthenticationStatus.ACCEPTED);
+        assertThat(response.getAuthenticationStatus()).isEqualTo(AuthenticationStatus.ACCEPTED);
         verify(validationService).isValid(message);
         verify(authenticationService).authenticate("valid-token");
     }
@@ -61,7 +61,7 @@ class AuthenticationConsumerTest {
         final AuthenticationResponse response = consumer.handleAuthRequest(message);
 
         assertThat(response.getRequestId()).isEqualTo("req-789");
-        assertThat(response.getStatus()).isEqualTo(AuthenticationStatus.REJECTED);
+        assertThat(response.getAuthenticationStatus()).isEqualTo(AuthenticationStatus.REJECTED);
         verify(validationService).isValid(message);
         verify(authenticationService).authenticate("disabled-token");
     }
@@ -75,7 +75,7 @@ class AuthenticationConsumerTest {
         final AuthenticationResponse response = consumer.handleAuthRequest(message);
 
         assertThat(response.getRequestId()).isEqualTo("req-999");
-        assertThat(response.getStatus()).isEqualTo(AuthenticationStatus.UNKNOWN);
+        assertThat(response.getAuthenticationStatus()).isEqualTo(AuthenticationStatus.UNKNOWN);
         verify(validationService).isValid(message);
         verify(authenticationService).authenticate("unknown-token");
     }

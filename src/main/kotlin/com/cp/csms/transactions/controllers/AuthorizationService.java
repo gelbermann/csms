@@ -67,7 +67,7 @@ public class AuthorizationService {
 
         try {
             final AuthenticationResponse response = future.get(timeoutSeconds, TimeUnit.SECONDS);
-            return response.getStatus();
+            return response.getAuthenticationStatus();
         } catch (TimeoutException e) {
             log.warn("Authorization request timed out for requestId: {}", requestId);
             throw e;
