@@ -1,5 +1,6 @@
 package com.cp.csms.transactions.controllers;
 
+import com.cp.csms.common.AuthenticationStatus;
 import com.cp.csms.transactions.AuthorizationRequest;
 import com.cp.csms.transactions.AuthorizationResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 
@@ -23,34 +23,23 @@ public class TransactionController {
 
     private final AuthorizationService authorizationService;
 
-//    @PostMapping("/authorize")
-//    public AuthorizationResponse authorizeTransaction(@RequestBody AuthorizationRequest request) {
-//        log.info("Authorizing transaction for request: {}", request);
-//
-//        final var response = authorizationService.authorize(request);
-//
-//        try {
-//            AuthResponse response = future.get(5, TimeUnit.SECONDS);
-//            return ResponseEntity.ok(response);
-//        } catch (TimeoutException e) {
-//            pendingRequests.remove(correlationId);
-//            return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
-//                    .body(new AuthResponse("Timeout"));
-//        } catch (Exception e) {
-//            pendingRequests.remove(correlationId);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(new AuthResponse("Error"));
-//        }
-//    }
-
     @PostMapping("/authorize")
-    public AuthorizationResponse authorizeTransaction(@RequestBody AuthorizationRequest request) {
+    public ResponseEntity<AuthorizationResponse> authorizeTransaction(@RequestBody AuthorizationRequest request) {
         log.info("Authorizing transaction for request: {}", request);
 
-        final var status = authorizationService.authorize(request);
-
-        return AuthorizationResponse.builder()
-                .authenticationStatus(status.orElse(null))
-                .build();
+        try {
+            final AuthenticationStatus authenticationStatus = authorizationService.authorize(request);
+            log.info("Authorization result for request {}: {}", request, authenticationStatus);
+            return ResponseEntity.ok(
+                    AuthorizationResponse.builder()
+                            .authenticationStatus(authenticationStatus)
+                            .build()
+            );
+        } catch (TimeoutException e) {
+            return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
+
 }

@@ -33,7 +33,7 @@ public class AuthorizationService {
 
     private final KafkaTopicConfig kafkaTopicConfig;
 
-    public Optional<AuthenticationStatus> authorize(AuthorizationRequest request) {
+    public AuthenticationStatus authorize(AuthorizationRequest request) throws TimeoutException {
         final String requestId = UUID.randomUUID().toString();
         final CompletableFuture<AuthenticationResponse> future = new CompletableFuture<>();
 
@@ -48,15 +48,15 @@ public class AuthorizationService {
 
         try {
             final AuthenticationResponse response = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            return Optional.of(response.getStatus());
+            return response.getStatus();
         } catch (TimeoutException e) {
             pendingRequests.remove(requestId);
             log.warn("Authorization request timed out for requestId: {}", requestId);
-            return Optional.empty();
+            throw e;
         } catch (Exception e) {
             pendingRequests.remove(requestId);
             log.error("Error while authorizing requestId: {}", requestId, e);
-            return Optional.empty();
+            throw new RuntimeException(e);
         }
     }
 

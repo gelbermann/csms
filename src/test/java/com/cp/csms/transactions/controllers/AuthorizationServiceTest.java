@@ -16,10 +16,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -50,12 +51,12 @@ public class AuthorizationServiceTest {
     private static final int ASYNC_SETUP_DELAY_MS = 100;
 
     @Test
-    public void authorize_shouldSendKafkaMessageAndReturnAcceptedStatus_whenResponseReceivedInTime() {
+    public void authorize_shouldSendKafkaMessageAndReturnAcceptedStatus_whenResponseReceivedInTime() throws Exception {
         stubKafkaConfiguration();
         final AuthorizationRequest request = createAuthorizationRequest();
         stubKafkaProducer();
 
-        final CompletableFuture<Optional<AuthenticationStatus>> authorizationFuture = 
+        final CompletableFuture<AuthenticationStatus> authorizationFuture = 
                 executeAuthorizationAsync(request);
         waitForAsyncSetup();
 
@@ -65,23 +66,22 @@ public class AuthorizationServiceTest {
         final AuthenticationResponse incomingResponse = createAuthResponse(sentRequestId, AuthenticationStatus.ACCEPTED);
         underTest.handleAuthResponse(incomingResponse);
 
-        final Optional<AuthenticationStatus> result = authorizationFuture.join();
+        final AuthenticationStatus result = authorizationFuture.get();
 
-        assertThat(result).isPresent();
-        assertThat(result.get()).isEqualTo(AuthenticationStatus.ACCEPTED);
+        assertThat(result).isEqualTo(AuthenticationStatus.ACCEPTED);
         assertThat(sentMessage.getRequestId()).isEqualTo(sentRequestId);
         assertThat(sentMessage.getToken()).isEqualTo(DRIVER_ID);
     }
 
     @Test
-    public void authorize_shouldReturnEmpty_whenTimeoutOccurs() {
+    public void authorize_shouldThrowTimeoutException_whenTimeoutOccurs() {
         stubKafkaConfiguration();
         final AuthorizationRequest request = createAuthorizationRequest();
         stubKafkaProducer();
 
-        final Optional<AuthenticationStatus> result = underTest.authorize(request);
+        assertThatThrownBy(() -> underTest.authorize(request))
+                .isInstanceOf(TimeoutException.class);
 
-        assertThat(result).isEmpty();
         verify(kafkaProducer).send(eq(AUTH_REQUEST_TOPIC), anyString(), any(AuthenticationMessage.class));
     }
 
@@ -91,7 +91,8 @@ public class AuthorizationServiceTest {
         final AuthorizationRequest request = createAuthorizationRequest();
         stubKafkaProducer();
 
-        underTest.authorize(request);
+        assertThatThrownBy(() -> underTest.authorize(request))
+                .isInstanceOf(TimeoutException.class);
 
         final AuthenticationMessage sentMessage = captureKafkaMessage();
         final String sentRequestId = requestIdCaptor.getValue();
@@ -102,12 +103,12 @@ public class AuthorizationServiceTest {
     }
 
     @Test
-    public void handleAuthResponse_shouldCompleteFuture_whenPendingRequestExists() {
+    public void handleAuthResponse_shouldCompleteFuture_whenPendingRequestExists() throws Exception {
         stubKafkaConfiguration();
         final AuthorizationRequest request = createAuthorizationRequest();
         stubKafkaProducer();
 
-        final CompletableFuture<Optional<AuthenticationStatus>> authorizationFuture = 
+        final CompletableFuture<AuthenticationStatus> authorizationFuture = 
                 executeAuthorizationAsync(request);
         waitForAsyncSetup();
 
@@ -117,9 +118,8 @@ public class AuthorizationServiceTest {
         final AuthenticationResponse incomingResponse = createAuthResponse(sentRequestId, AuthenticationStatus.INVALID);
         underTest.handleAuthResponse(incomingResponse);
 
-        final Optional<AuthenticationStatus> result = authorizationFuture.join();
-        assertThat(result).isPresent();
-        assertThat(result.get()).isEqualTo(AuthenticationStatus.INVALID);
+        final AuthenticationStatus result = authorizationFuture.get();
+        assertThat(result).isEqualTo(AuthenticationStatus.INVALID);
     }
 
     @Test
@@ -151,8 +151,14 @@ public class AuthorizationServiceTest {
                 .thenReturn(future);
     }
 
-    private CompletableFuture<Optional<AuthenticationStatus>> executeAuthorizationAsync(AuthorizationRequest request) {
-        return CompletableFuture.supplyAsync(() -> underTest.authorize(request));
+    private CompletableFuture<AuthenticationStatus> executeAuthorizationAsync(AuthorizationRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return underTest.authorize(request);
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private void waitForAsyncSetup() {
