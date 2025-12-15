@@ -1,5 +1,6 @@
 package com.cp.csms.authentication;
 
+import com.cp.csms.authentication.validation.AuthenticationValidator;
 import com.cp.csms.common.AuthenticationMessage;
 import com.cp.csms.common.AuthenticationResponse;
 import com.cp.csms.common.AuthenticationStatus;
@@ -9,19 +10,19 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.List;
 
 @Service
 public class AuthenticationConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(AuthenticationConsumer.class);
 
-    private static final int MIN_TOKEN_LENGTH = 20;
-    private static final int MAX_TOKEN_LENGTH = 80;
-
+    private final List<AuthenticationValidator> validators;
     private final TokenStatusProvider tokenStatusProvider;
 
-    public AuthenticationConsumer(TokenStatusProvider tokenStatusProvider) {
+    public AuthenticationConsumer(List<AuthenticationValidator> validators,
+                                  TokenStatusProvider tokenStatusProvider) {
+        this.validators = validators;
         this.tokenStatusProvider = tokenStatusProvider;
     }
 
@@ -34,16 +35,18 @@ public class AuthenticationConsumer {
     public AuthenticationResponse handleAuthRequest(AuthenticationMessage message) {
         log.info("Received authentication request: {}", message);
 
-        final String token = message.getToken();
-        if (!validateToken(token)) {
-            log.warn("Invalid token format: {}", token);
+        final boolean isValid = validators.stream()
+                .allMatch(validator -> validator.validate(message));
+
+        if (!isValid) {
+            log.warn("Validation failed for token: {}", message.getToken());
             return new AuthenticationResponse(
                     message.getRequestId(),
                     AuthenticationStatus.INVALID
             );
         }
 
-        final AuthenticationStatus authenticationStatus = tokenStatusProvider.isTokenEnabled(token)
+        final AuthenticationStatus authenticationStatus = tokenStatusProvider.isTokenEnabled(message.getToken())
                 .map(tokenEnabled -> tokenEnabled
                         ? AuthenticationStatus.ACCEPTED
                         : AuthenticationStatus.REJECTED)
@@ -54,13 +57,5 @@ public class AuthenticationConsumer {
                 authenticationStatus
         );
     }
-
-    private boolean validateToken(String token) {
-        return Optional.ofNullable(token)
-                .filter(value -> value.length() >= MIN_TOKEN_LENGTH)
-                .filter(value -> value.length() <= MAX_TOKEN_LENGTH)
-                .isPresent();
-    }
-
 
 }
