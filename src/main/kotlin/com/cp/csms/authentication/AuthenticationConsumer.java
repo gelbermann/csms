@@ -18,9 +18,8 @@ public class AuthenticationConsumer {
     private final ValidationService validationService;
     private final AuthenticationService authenticationService;
 
-    public AuthenticationConsumer(
-            ValidationService validationService,
-            AuthenticationService authenticationService) {
+    public AuthenticationConsumer(ValidationService validationService,
+                                  AuthenticationService authenticationService) {
         this.validationService = validationService;
         this.authenticationService = authenticationService;
     }
@@ -42,7 +41,7 @@ public class AuthenticationConsumer {
             );
         }
 
-        final AuthenticationStatus authenticationStatus = 
+        final AuthenticationStatus authenticationStatus =
                 authenticationService.authenticate(message.getToken());
         return new AuthenticationResponse(
                 message.getRequestId(),
