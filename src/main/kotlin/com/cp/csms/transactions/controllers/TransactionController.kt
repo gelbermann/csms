@@ -1,8 +1,8 @@
 package com.cp.csms.transactions.controllers
 
-import com.cp.csms.common.AuthenticationStatus
 import com.cp.csms.transactions.AuthorizationRequest
 import com.cp.csms.transactions.AuthorizationResponse
+import com.cp.csms.transactions.AuthorizationService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

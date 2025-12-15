@@ -1,10 +1,9 @@
-package com.cp.csms.transactions.controllers
+package com.cp.csms.transactions
 
 import com.cp.csms.common.AuthenticationMessage
 import com.cp.csms.common.AuthenticationResponse
 import com.cp.csms.common.AuthenticationStatus
 import com.cp.csms.config.KafkaTopicConfig
-import com.cp.csms.transactions.AuthorizationRequest
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.slf4j.LoggerFactory

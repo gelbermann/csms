@@ -5,6 +5,7 @@ import com.cp.csms.common.AuthenticationResponse
 import com.cp.csms.common.AuthenticationStatus
 import com.cp.csms.config.KafkaTopicConfig
 import com.cp.csms.transactions.AuthorizationRequest
+import com.cp.csms.transactions.AuthorizationService
 import com.cp.csms.transactions.DriverIdentifier
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
